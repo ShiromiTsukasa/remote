@@ -1,0 +1,8 @@
+[scripts]
+init = ["python", "-c", "print('hello world')"]
+cont = {command = ["python", "-c", "print('wallah')"], next = "init"}
+test = {command = ["python", "-c", "print('hi babe')"]}
+
+[scripts.fall]
+command = ["python", "-c", "print('sucks to suck')"]
+next = "test"
