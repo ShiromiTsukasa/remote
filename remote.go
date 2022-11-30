@@ -18,29 +18,6 @@ func main() {
 		return
 	}
 
-	// check if the current working directory contains a file named "remote.toml"
-
-	_, err2 := os.Open(cwd + "/remote.toml")
-
-	if err2 != nil {
-		println("Error: ", err2.Error())
-		println("Cannot find or open `remote.toml` in current working directory")
-		println("Terminating.")
-		return
-	}
-
-	// parse the file
-	config, err3 := toml.LoadFile(path.Join(cwd, "remote.toml"))
-
-	if err3 != nil {
-		println("Error: ", err3.Error())
-		println("Cannot parse `remote.toml`")
-		println("Terminating.")
-		return
-	}
-
-	scripts := config.Get("scripts").(*toml.Tree)
-
 	// get called script
 	if len(os.Args) < 2 {
 		println("Error: No script name provided")
@@ -48,7 +25,78 @@ func main() {
 		return
 	}
 
-	scriptName := os.Args[1]
+	var has_filename bool
+	var filename string
+	scriptName := ""
+
+	skipNext := false
+
+	for i, e := range os.Args[1:len(os.Args)] {
+		if skipNext {
+			skipNext = false
+			continue
+		}
+		if e == "-h" || e == "--help" {
+			println("Usage: remote [-h|--help] [-f|--file REMOTE FILE] command")
+			println("    -h | --help               : show help and exit")
+			println("    -f | --file REMOTE FILE   : use REMOTE FILE as the script to run from; default to `remote.toml`")
+			println("    command                   : the script name or command to run")
+			return
+		} else if (e == "-f" || e == "--file") && (i+1+1 < len(os.Args)) {
+			has_filename = true
+			filename = os.Args[i+1+1]
+			skipNext = true
+		} else {
+			scriptName = os.Args[i+1]
+		}
+	}
+
+	var scripts *toml.Tree
+
+	if !has_filename {
+		// check if the current working directory contains a file named "remote.toml"
+
+		_, err2 := os.Open(cwd + "/remote.toml")
+
+		if err2 != nil {
+			println("Error: ", err2.Error())
+			println("Cannot find or open `remote.toml` in current working directory")
+			println("Terminating.")
+			return
+		}
+
+		// parse the file
+		config, err3 := toml.LoadFile(path.Join(cwd, "remote.toml"))
+
+		if err3 != nil {
+			println("Error: ", err3.Error())
+			println("Cannot parse `remote.toml`")
+			println("Terminating.")
+			return
+		}
+
+		scripts = config.Get("scripts").(*toml.Tree)
+	} else {
+		_, err2 := os.Open(cwd + "/" + filename)
+
+		if err2 != nil {
+			println("Error: ", err2.Error())
+			println("Cannot find or open `" + filename + "` in current working directory")
+			println("Terminating.")
+			return
+		}
+
+		config, err3 := toml.LoadFile(path.Join(cwd, filename))
+
+		if err3 != nil {
+			println("Error: ", err3.Error())
+			println("Cannot parse `" + filename + "`")
+			println("Terminating.")
+			return
+		}
+
+		scripts = config.Get("scripts").(*toml.Tree)
+	}
 
 	// check if script exists
 	if !scripts.Has(scriptName) {
