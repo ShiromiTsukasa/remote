@@ -2,6 +2,8 @@
 init = ["python", "-c", "print('hello world')"]
 cont = {command = ["python", "-c", "print('wallah')"], next = "init"}
 test = {command = ["python", "-c", "print('hi babe')"]}
+testnull = ['python']
+testnull2 = {command = ['python'], next = "testnull"}
 
 [scripts.fall]
 command = ["python", "-c", "print('sucks to suck')"]
